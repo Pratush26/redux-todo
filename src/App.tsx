@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from './redux/hooks'
 import {
   addTodo,
@@ -15,6 +15,8 @@ import {
 import type { TodoCategory, TodoPriority, TodoStatus } from './types/todo.interface'
 import { Button } from './components/ui/button'
 import { cn } from './lib/utils'
+import { Toaster, toast } from 'sonner'
+import { getInitialTheme, applyTheme, type Theme } from './lib/theme'
 import {
   Plus,
   Trash2,
@@ -23,6 +25,8 @@ import {
   X,
   Search,
   ListTodo,
+  Sun,
+  Moon,
 } from 'lucide-react'
 
 const CATEGORIES: TodoCategory[] = ['personal', 'work', 'shopping', 'study', 'other']
@@ -49,6 +53,11 @@ function App() {
   const [search, setSearch] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState('')
+  const [theme, setTheme] = useState<Theme>(() => getInitialTheme())
+
+  useEffect(() => {
+    applyTheme(theme)
+  }, [theme])
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,6 +78,7 @@ function App() {
     setPriority('medium')
     setCategory('personal')
     setDueDate('')
+    toast.success('Todo added')
   }
 
   const startEdit = (id: string, current: string) => {
@@ -79,6 +89,7 @@ function App() {
   const saveEdit = (id: string) => {
     if (editTitle.trim()) {
       dispatch(updateTodo({ id, title: editTitle.trim() }))
+      toast.success('Todo updated')
     }
     setEditingId(null)
     setEditTitle('')
@@ -100,12 +111,20 @@ function App() {
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <ListTodo className="size-5" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold tracking-tight">Redux Todo</h1>
             <p className="text-sm text-muted-foreground">
               {counts.active} active · {counts.completed} completed · {counts.total} total
             </p>
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </Button>
         </header>
 
         {/* Add form */}
@@ -202,7 +221,14 @@ function App() {
             />
           </div>
           {counts.completed > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => dispatch(clearCompleted())}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                dispatch(clearCompleted())
+                toast.success('Completed todos cleared')
+              }}
+            >
               <Trash2 className="size-4" /> Clear completed
             </Button>
           )}
@@ -224,7 +250,10 @@ function App() {
               )}
             >
               <button
-                onClick={() => dispatch(toggleTodo(todo.id))}
+                onClick={() => {
+                  dispatch(toggleTodo(todo.id))
+                  toast.info(todo.isCompleted ? 'Marked as active' : 'Marked as complete')
+                }}
                 className={cn(
                   'mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border border-input transition',
                   todo.isCompleted && 'border-primary bg-primary text-primary-foreground',
@@ -301,7 +330,10 @@ function App() {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => dispatch(deleteTodo(todo.id))}
+                    onClick={() => {
+                      dispatch(deleteTodo(todo.id))
+                      toast.error('Todo deleted')
+                    }}
                   >
                     <Trash2 className="size-3.5" />
                   </Button>
@@ -311,6 +343,7 @@ function App() {
           ))}
         </ul>
       </div>
+      <Toaster richColors position="top-right" />
     </main>
   )
 }
