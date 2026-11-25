@@ -4,6 +4,11 @@ import "./index.css";
 import App from "./App.tsx";
 import { Provider } from "react-redux";
 import { store } from "./redux/store.ts";
+import { saveTodoState } from "./lib/db.ts";
+
+store.subscribe(() => {
+  saveTodoState(store.getState().todo)
+})
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

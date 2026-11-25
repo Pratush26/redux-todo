@@ -1,8 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { rootReducer } from './rootReducer'
+import { loadTodoState } from '@/lib/db'
+
+const preloadedTodo = loadTodoState()
 
 export const store = configureStore({
   reducer: rootReducer,
+  preloadedState: preloadedTodo ? { todo: preloadedTodo } : undefined,
   devTools: false
 })
 
